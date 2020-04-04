@@ -116,55 +116,22 @@ for item in LON_LIST_UNIQ:
          # 5) Remove the max from the lists, remove duplicates
                 temp_max = LIST_PTS_TMP.pop(0)
                 LIST_PTS.pop(0)
-         # 6) Remove duplicate files, new list where file is different from temp_max file
+         # 6) Remove duplicate files, new list where files are different from temp_max file
                 LIST_PTS_TMP = list(filter(lambda x: x[-1] != temp_max[-1], LIST_PTS_TMP))
          # 7) Calculate max distance
-                list_pts_dist = distConv(
+                list_pts_dist = distConv(temp_max, min(LIST_PTS_TMP, key=lambda item:item[0]))
+         # 8) If greater than previous ones, update it
+                if list_pts_dist > TEMP_MAX_DIST:
+                    TEMP_MAX_DIST = list_pts_dist
+                i += 1
+         # 9) Update lat_diff
+            lat_diff = TEMP_MAX_DIST
    
-        
-        
-    # A - A - A  | RUN FOR GROUP A
-        # Make a copy for editing that does not include the max line:
-        A_TUP_LIST = list(filter(lambda z: z[-1] != OVERALL_MAX[-1], TUP_LIST_TEMP))      
-        A_NUM_LIST = [OVERALL_MAX[-1]]         # For storing which lines we've checked
-        A_MAX_TEMP = OVERALL_MIN          # This might break it (but can't have it as OVERALL_MAX)
-        A_MIN_TEMP = OVERALL_MIN
-        
-
-           
-        
-        while len(A_TUP_LIST) > 0:
-            #print("LEN:  ", len(A_TUP_LIST))
-            if len(A_TUP_LIST) == 1:
-                # If 1, it is the min
-                A_MIN_TEMP = A_TUP_LIST[0]
-                A_TUP_LIST = []
-            elif len(A_TUP_LIST) == 2:
-                # If 2, just find the min
-                A_MIN_TEMP = min(A_TUP_LIST, key=lambda item:item[0])
-                A_TUP_LIST = []
-            else:
-                # If >2, remove the max value and purge that line
-                # If it removes all values from list, then that max is actually the min
-                A_MIN_TEMP = max(A_TUP_LIST, key=lambda item:item[0])
-                A_TUP_LIST = list(filter(lambda z: z[-1] != A_MIN_TEMP[-1], A_TUP_LIST))
-
-        A_MIN = max([A_MIN_TEMP, OVERALL_MIN], key=lambda item:item[0])
-        #print("A_MIN:   ", A_MIN, "   OVERALL_MIN:   ", OVERALL_MIN)
-        A_B_DIST_LIST.append(distConv(OVERALL_MAX, A_MIN))
-        #print("DIST LIST:  ", A_B_DIST_LIST)
-        LAT_DIFF = max(A_B_DIST_LIST)
-        LAT_DIFF = min([distConv(OVERALL_MAX, A_MIN), distConv(OVERALL_MAX, OVERALL_MIN)])
-        #print("DIST LIST:  ", [distConv(OVERALL_MAX, A_MIN), distConv(OVERALL_MAX, OVERALL_MIN)])
-        
-    
+    # Update the min/max values (irrevlevant for max lateral distance)
     MAX_LIST.append(OVERALL_MAX)
     MIN_LIST.append(OVERALL_MIN)
     DIFF_LIST.append((LAT_DIFF, item))
     
-
-
-
 # Write the new CSV files for importing into ArcMap
 with open(os.path.join(PATH,"output",'max_line.csv'), 'w', newline='') as out:
     max_out = csv.writer(out)
@@ -244,42 +211,13 @@ for row in DEL_FILE:
     DEL_LONS.append(float(row[0]))
     DEL_ELEVS.append(float(row[1]))
 
-
-
-# j = 0
-# while j < len(FILE_NAMES):
-#     plt.plot(FILE_LONS[j], FILE_ELEVS[j], '.', label=str(FILE_NAMES[j]), markersize=1)
-#     j += 1
-# plt.xlim(-180,180)
-# plt.xlabel('Longitude [deg]')
-# plt.ylabel('Elevation [m]')
-# plt.legend()
-# plt.show()
-# 
-# print("End")
-# 
-# #Plot out the diff distribution
-# #print(max(LON_LIST_UNIQ), min(LON_LIST_UNIQ))
 x_data1 = [x[1] for x in DIFF_LIST]
 y_data1 = [x[0] for x in DIFF_LIST]
 x_data2 = [x[1] for x in DIFF_LIST_WIN]
 y_data2 = [x[0] for x in DIFF_LIST_WIN]
-# print(y_data2)
-# plt.plot(x_data1, y_data1)
-# plt.plot(x_data2, y_data2)
-# plt.xlim(-180,180)
-# plt.xlabel('Longitude [deg]')
-# plt.ylabel('Max Lateral Distance Between Mapped Shorelines [km]')
-# 
-# plt.show()
-#D_COLORS = ['#EFFA14', '#C1DF1B', '#94C422', '#66A92A', '#398E31', '#0C7339']
-#A_COLORS = ['#E7040C', '#D00E14', '#BA181C', '#A42224', '#8E2C2C', '#783634', '#62413C', '#000000']
 
 D_COLORS = ['#800000', '#9A6324', '#E6194B', '#F58231', '#FABEBE', '#FFE119']
 A_COLORS = ['#4363D8', '#AAFFC3', '#F032E6', '#000000', '#000075', '#E6BEFF', '#A9A9A9', '#FFFAC8']
-
-# print(FILE_ELEVS_D[1][0])
-# print(FILE_ELEVS_A[1][0])
 
 fig, axs = plt.subplots(3,1)
 j = 0
@@ -318,17 +256,6 @@ axs[2].set_ylabel('Max Distance [km]')
 axs[2].minorticks_on()
 axs[2].grid(which='major', linestyle='-', linewidth=0.5)
 axs[2].grid(which='minor', linestyle=':', linewidth=0.4)
-
-# j = 0
-# while j < len(FILE_NAMES_A):
-#     axs[3].plot(FILE_LONS_A[j], FILE_ELEVS_A[j], '.', label=str(FILE_NAMES_A[j]), markersize=0.01, color=A_COLORS[j])
-#     j += 1
-# j = 0
-# while j < len(FILE_NAMES_D):
-#     axs[3].plot(FILE_LONS_D[j], FILE_ELEVS_D[j], '.', label=str(FILE_NAMES_D[j]), markersize=0.01, color=D_COLORS[j])
-#     j += 1
-# axs[3].grid(True)
-# axs[3].set_xlim(-180,180)
 
 #axs[0].legend()
 #axs[1].legend()
