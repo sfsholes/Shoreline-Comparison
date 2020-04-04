@@ -132,6 +132,10 @@ for item in LON_LIST_UNIQ:
     MIN_LIST.append(OVERALL_MIN)
     DIFF_LIST.append((LAT_DIFF, item))
     
+    ####### -- FOR TESTING -- ######
+    if item == -43:
+        print(f"-43E MAX: {OVERALL_MAX}, MIN: {OVERALL_MIN}, DIFF: {lat_diff}") 
+    
 # Write the new CSV files for importing into ArcMap
 with open(os.path.join(PATH,"output",'max_line.csv'), 'w', newline='') as out:
     max_out = csv.writer(out)
