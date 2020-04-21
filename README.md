@@ -1,6 +1,6 @@
 # Shoreline-Comparison
 Tool for comparing distance between line shapefiles at different latitudes (Sholes et al. 2020)
-This paper is currently "submitted" but in the meantime you can cite Sholes et al. 2019 (Mars 9 Conference Abstract)
+This paper is currently in review at the Journal of Geophysical Research: Planets but in the meantime you can cite Sholes et al. 2019 (Mars 9 Conference Abstract).
 
 Used to compare the differences between mapped shorelines on Mars.
 Takes CSV files exported from ArcMap and computes the max latitudinal distance between any of the "shoreline" versions for each longitude within a tolerance (TOL) value.
