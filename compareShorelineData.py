@@ -50,15 +50,27 @@ def meanLon(dataset):
 
     return updated_list
 
-def findMinLen(data):
+def findLen(data, method="min"):
     """Finds the minimum geodesic length between different datasets for each long
     input data: list of pandas dataframes
-    return min_df: single pandas dataframe with geodesic lengths for each unique lon"""
+    return min_df: single pandas dataframe with geodesic lengths for each unique lon
+    input data: a list of all the pandas dataframes
+    input method: a str of either "min," "mean," or "max"
+    return result_df: a pandas dataframe"""
 
     full_df = pd.concat(data)
-    min_df = full_df.groupby('Lon')['LENGTH_GEO'].min().reset_index()
 
-    return min_df
+    if method.lower() in ["min", "minimum"]:
+        result_df = full_df.groupby('Lon')['LENGTH_GEO'].min().reset_index()
+    elif method.lower() in ["mean", "average"]:
+        result_df = full_df.groupby('Lon')['LENGTH_GEO'].mean().reset_index()
+    elif method.lower() in ["max", "maximum"]:
+        result_df = full_df.groupby('Lon')['LENGTH_GEO'].max().reset_index()
+    else:
+        print("Choose either 'min', 'mean', or 'max'")
+        pass
+
+    return result_df
 
 def grabElevation(path):
     """Finds the elevation data in the path and places it into a pandas dataframe"""
@@ -137,9 +149,8 @@ def plotOffsets(elev_dataset, offset_data):
 
     plt.show()
 
-
 shoreline_data = openData(PATH)
-offset_df = findMinLen(meanLon(openData(OFFSET_PATH)))
+offset_df = findLen(meanLon(openData(OFFSET_PATH)), method="max")
 elev_df = grabElevation(ELEV_PATH)
 
 plotOffsets(elev_df, offset_df)
