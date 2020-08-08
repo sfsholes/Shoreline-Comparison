@@ -1,17 +1,31 @@
+# compareShorelineData.py
+# By Steven F. Sholes (sfsholes@uw.edu)
+# Created for Sholes et al. 2020 submitted to JGR: Planets
+
+# This calculates and plots the lateral offset and elevations between
+#  different maps of the hypothetical Arabia and Deuteronilus shorelines
+#  on Mars.
+
+# Import dependencies
 import pandas as pd
 import numpy as np
 import os
 import matplotlib.pyplot as plt
 import re
 
+# Modify the paths of where the data ZachRemaps
+# PATH: main directory everything else is stored in
 PATH = "D://Research//05_GlobalMarsShorelines//3_Results"
+# OFFSET_PATH: location within PATH where lateral offset data is stored
 OFFSET_PATH = os.path.join(os.path.abspath(PATH),"0_Offsets", "Data")
+# ELEV_PATH: location within PATH where elevation data is stored
 ELEV_PATH = os.path.join(os.path.abspath(PATH),"ZachRemaps", "Vertex")
+# DELTA_PATH: file location within ELEV_PATH where delta elevation data is stored
 DELTA_PATH = os.path.join(os.path.abspath(ELEV_PATH),"Deltas", "DiAchille2010_Deltas_Z.csv")
 
 def openData(path):
-    """Opens up the .csv files in the given path and adds them to a
-    pandas dataframe
+    """Opens up the .csv files of the lateral offset data in the given path and
+    adds them to a pandas dataframe
     input path: str
     return combined_df: list of pandas dataframes"""
 
@@ -30,11 +44,10 @@ def openData(path):
             continue
 
     for dataset in combined_df:
-        print(dataset.columns)
-
         # This is needed to ensure all points are at nearest 1/4 line of longitude
         dataset['Lon'] = dataset['Lon'].apply(lambda x: round(x*(1/0.25))/(1/0.25))
         dataset['Lon'] = dataset['Lon'].apply(lambda x: 180.0 if x == -180.0 else x)
+        # Can also delete the unused columns from ArcMap export
         dataset = dataset.drop(columns=['FID', 'Id'], inplace=True)
         #print(dataset.head())
 
@@ -56,7 +69,8 @@ def meanLon(dataset):
         #print(database.head())
         new_df = database.groupby(['Lon'], as_index=False).agg( \
         {'LENGTH_GEO':['mean', pop_std]})
-        print(new_df.head())
+        #print(new_df.head())
+        #This is needed when adding the Std column to ensure appropriate column keys
         new_df.columns = ['Lon', 'LENGTH_GEO', 'Std']
         new_df.reindex(columns=new_df.columns)
         updated_list.append(new_df)
@@ -64,15 +78,17 @@ def meanLon(dataset):
     return updated_list
 
 def findLen(data, method="min"):
-    """Finds the minimum geodesic length between different datasets for each long
+    """Finds the minimum/mean/maximum geodesic length between different datasets
+    for each longitude. Defaults to min to be conservative.
+
     input data: list of pandas dataframes
-    return min_df: single pandas dataframe with geodesic lengths for each unique lon
-    input data: a list of all the pandas dataframes
     input method: a str of either "min," "mean," or "max"
     return result_df: a pandas dataframe"""
 
+    #Concatenating all dataframes makes it much easier to work on
     full_df = pd.concat(data)
 
+    #Check which method to use and apply it. A little leeway in choices.
     if method.lower() in ["min", "minimum"]:
         result_df = full_df.groupby('Lon')['LENGTH_GEO'].min().reset_index()
     elif method.lower() in ["mean", "average"]:
@@ -86,7 +102,9 @@ def findLen(data, method="min"):
     return result_df
 
 def grabElevation(path):
-    """Finds the elevation data in the path and places it into a pandas dataframe"""
+    """Finds the elevation data in the path and places it into a pandas dataframe
+    input path: str showing location of csv elevation files
+    return level_list: list of 2 dictonaries with label and pandas dataframe"""
 
     #Going to output a list of two lists of pandas dataframes
     #level_list[0] are the Arabia level data
@@ -97,12 +115,14 @@ def grabElevation(path):
         # Sometimes ArcMap exports as .csv or .txt
         if filename.endswith(".txt") or filename.endswith(".csv"):
             print("Reading elevations from..." + filename)
-
             elev_temp_df = pd.read_csv(os.path.join(path,filename))
+            # Need to convert column key names as they can be irregular in structure
             elev_temp_df.columns = elev_temp_df.columns.str.lower().str.capitalize()
-            print(filename)
+            # Extract the citation from the filename using regex
+            # e.g., finds _Parker1993_ and extracts out Parker1993 for the label
             head_label = re.search(r'_([A-Za-z]+[0-9]+)_', filename).group(1)
-            print('Header...', head_label)
+            #print('Header...', head_label
+            # This creates a new column with the new label and places the elevation data there
             if filename.find('Arabia') > 0:
                 level_list[0][head_label] = elev_temp_df
             elif filename.find('Deuteronilus') > 0:
@@ -111,12 +131,17 @@ def grabElevation(path):
                 continue
         else:
             continue
-    print(level_list)
+    #print(level_list)
     return level_list
 
 def plotOffsets(elev_dataset, offset_data):
-    """Plots the offsets between the different methodologies"""
+    """Plots the offsets between the different methodologies
+    input elev_dataset: pandas dataframe of elevation data
+    input offset_data: list of pandas dataframes with lateral offset data
+    returns nothing but does plot the figure for the paper"""
 
+    # Lists of colors to be consistent with ArcMap plot (Fig. 1a)
+    # D_COLORS for Deuteronilus Level, A_COLORS for Arabia Level, O_Colors for offset lines 
     D_COLORS = ['#800000', '#9A6324', '#E6194B', '#F58231', '#FABEBE', '#FFE119']
     A_COLORS = ['#4363D8', '#AAFFC3', '#F032E6', '#000000', '#000075', '#E6BEFF', '#A9A9A9', '#FFFAC8']
     O_COLORS = ['#888888', '#000000'] # '#CCCCCC' is for backup
