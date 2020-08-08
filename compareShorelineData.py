@@ -119,6 +119,7 @@ def plotOffsets(elev_dataset, offset_data):
 
     D_COLORS = ['#800000', '#9A6324', '#E6194B', '#F58231', '#FABEBE', '#FFE119']
     A_COLORS = ['#4363D8', '#AAFFC3', '#F032E6', '#000000', '#000075', '#E6BEFF', '#A9A9A9', '#FFFAC8']
+    O_COLORS = ['#888888', '#000000'] # '#CCCCCC' is for backup
 
     fig, axs = plt.subplots(3,1)
     ### --- PLOT DEUTERONILUS ELEVATIONS --- ###
@@ -144,9 +145,10 @@ def plotOffsets(elev_dataset, offset_data):
     axs[1].grid(which='minor', linestyle=':', linewidth=0.4)
 
     ### --- PLOT ARABIA OFFSETS --- ###
-    axs[2].plot(offset_data['Lon'], offset_data['LENGTH_GEO'], 'k')
+    for data in offset_data:
+        axs[2].plot(data['Lon'], data['LENGTH_GEO'], color=O_COLORS.pop(0))
     axs[2].set_xlim(-180,180)
-    axs[2].set_ylim(0,1500)
+    axs[2].set_ylim(0,2500)
     #axs[2].set_xlabel('Longitude [deg E]')
     axs[2].set_ylabel('Max Distance [km]')
     axs[2].minorticks_on()
@@ -161,9 +163,13 @@ def plotOffsets(elev_dataset, offset_data):
     plt.show()
 
 shoreline_data = openData(PATH)
-offset_df = findLen(meanLon(openData(OFFSET_PATH)), method="min")
+offset_data_meaned = meanLon(openData(OFFSET_PATH))
+min_offset = findLen(offset_data_meaned, method="min")
+mean_offset = findLen(offset_data_meaned, method="mean")
+max_offset = findLen(offset_data_meaned, method="max")
 elev_df = grabElevation(ELEV_PATH)
 
-plotOffsets(elev_df, offset_df)
-print('Min offset average: \n', offset_df.mean())
-print('Min offset std: \n', offset_df.std())
+# I've plotted them in reverse so the main one ("min") is plotted on top
+plotOffsets(elev_df, [max_offset, min_offset])
+print('Min offset average: \n', min_offset.mean())
+print('Min offset std: \n', min_offset.std())
