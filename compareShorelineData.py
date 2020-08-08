@@ -30,9 +30,12 @@ def openData(path):
             continue
 
     for dataset in combined_df:
+        print(dataset.columns)
+
         # This is needed to ensure all points are at nearest 1/4 line of longitude
         dataset['Lon'] = dataset['Lon'].apply(lambda x: round(x*(1/0.25))/(1/0.25))
         dataset['Lon'] = dataset['Lon'].apply(lambda x: 180.0 if x == -180.0 else x)
+        dataset = dataset.drop(columns=['FID', 'Id'], inplace=True)
         #print(dataset.head())
 
     return combined_df
@@ -42,10 +45,20 @@ def meanLon(dataset):
     dataset (e.g., where multiple measurements are made at each lon).
     input dataset: pandas dataframe
     return mean_dataset: pandas dataframe"""
+
+    def pop_std(x):
+        """Using pop std when averaging measurements for a single method at a
+        single longitude."""
+        return x.std(ddof=0)
+
     updated_list = []
     for database in dataset:
         #print(database.head())
-        new_df = database.groupby('Lon').mean()
+        new_df = database.groupby(['Lon'], as_index=False).agg( \
+        {'LENGTH_GEO':['mean', pop_std]})
+        print(new_df.head())
+        new_df.columns = ['Lon', 'LENGTH_GEO', 'Std']
+        new_df.reindex(columns=new_df.columns)
         updated_list.append(new_df)
 
     return updated_list
@@ -110,8 +123,6 @@ def plotOffsets(elev_dataset, offset_data):
     fig, axs = plt.subplots(3,1)
     ### --- PLOT DEUTERONILUS ELEVATIONS --- ###
     for key, df in zip(elev_dataset[1].keys(), elev_dataset[1].values()):
-        print('key...', key)
-        print(df)
         # using pop below works but should be edited later if using the colors again
         axs[0].plot(df['Lon'], df['Elev'], '.', label=key, markersize=0.8, color=D_COLORS.pop(0))
     axs[0].set_xlim(-180,180)
@@ -135,7 +146,7 @@ def plotOffsets(elev_dataset, offset_data):
     ### --- PLOT ARABIA OFFSETS --- ###
     axs[2].plot(offset_data['Lon'], offset_data['LENGTH_GEO'], 'k')
     axs[2].set_xlim(-180,180)
-    axs[2].set_ylim(0,2600)
+    axs[2].set_ylim(0,1500)
     #axs[2].set_xlabel('Longitude [deg E]')
     axs[2].set_ylabel('Max Distance [km]')
     axs[2].minorticks_on()
@@ -150,7 +161,9 @@ def plotOffsets(elev_dataset, offset_data):
     plt.show()
 
 shoreline_data = openData(PATH)
-offset_df = findLen(meanLon(openData(OFFSET_PATH)), method="max")
+offset_df = findLen(meanLon(openData(OFFSET_PATH)), method="min")
 elev_df = grabElevation(ELEV_PATH)
 
 plotOffsets(elev_df, offset_df)
+print('Min offset average: \n', offset_df.mean())
+print('Min offset std: \n', offset_df.std())
