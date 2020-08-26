@@ -141,7 +141,7 @@ def plotOffsets(elev_dataset, offset_data):
     returns nothing but does plot the figure for the paper"""
 
     # Lists of colors to be consistent with ArcMap plot (Fig. 1a)
-    # D_COLORS for Deuteronilus Level, A_COLORS for Arabia Level, O_Colors for offset lines 
+    # D_COLORS for Deuteronilus Level, A_COLORS for Arabia Level, O_Colors for offset lines
     D_COLORS = ['#800000', '#9A6324', '#E6194B', '#F58231', '#FABEBE', '#FFE119']
     A_COLORS = ['#4363D8', '#AAFFC3', '#F032E6', '#000000', '#000075', '#E6BEFF', '#A9A9A9', '#FFFAC8']
     O_COLORS = ['#888888', '#000000'] # '#CCCCCC' is for backup
@@ -188,7 +188,8 @@ def plotOffsets(elev_dataset, offset_data):
     plt.show()
 
 shoreline_data = openData(PATH)
-offset_data_meaned = meanLon(openData(OFFSET_PATH))
+#offset_data_meaned = meanLon(openData(OFFSET_PATH))
+offset_data_meaned = openData(OFFSET_PATH)
 min_offset = findLen(offset_data_meaned, method="min")
 mean_offset = findLen(offset_data_meaned, method="mean")
 max_offset = findLen(offset_data_meaned, method="max")
