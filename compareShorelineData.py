@@ -138,6 +138,8 @@ def plotOffsets(elev_dataset, offset_data):
     """Plots the offsets between the different methodologies
     input elev_dataset: pandas dataframe of elevation data
     input offset_data: list of pandas dataframes with lateral offset data
+                       offset[0] : list of df for DEUTERONILUS
+                       offset[1] : list of df for ARABIA
     returns nothing but does plot the figure for the paper"""
 
     # Lists of colors to be consistent with ArcMap plot (Fig. 1a)
@@ -145,8 +147,9 @@ def plotOffsets(elev_dataset, offset_data):
     D_COLORS = ['#800000', '#9A6324', '#E6194B', '#F58231', '#FABEBE', '#FFE119']
     A_COLORS = ['#4363D8', '#AAFFC3', '#F032E6', '#000000', '#000075', '#E6BEFF', '#A9A9A9', '#FFFAC8']
     O_COLORS = ['#888888', '#000000'] # '#CCCCCC' is for backup
+    O_COLORS2 = ['#888888', '#000000']
 
-    fig, axs = plt.subplots(3,1)
+    fig, axs = plt.subplots(4,1)
     ### --- PLOT DEUTERONILUS ELEVATIONS --- ###
     for key, df in zip(elev_dataset[1].keys(), elev_dataset[1].values()):
         # using pop below works but should be edited later if using the colors again
@@ -169,16 +172,29 @@ def plotOffsets(elev_dataset, offset_data):
     axs[1].grid(which='major', linestyle='-', linewidth=0.5)
     axs[1].grid(which='minor', linestyle=':', linewidth=0.4)
 
-    ### --- PLOT ARABIA OFFSETS --- ###
-    for data in offset_data:
-        axs[2].plot(data['Lon'], data['LENGTH_GEO'], color=O_COLORS.pop(0))
+    ### --- PLOT DEUTERONILIUS OFFSETS --- ###
+    for data in offset_data[0]:
+        axs[2].plot(data['Lon'], data['LENGTH_GEO'], color=O_COLORS2.pop(0))
     axs[2].set_xlim(-180,180)
-    axs[2].set_ylim(0,2500)
+    #axs[2].set_ylim(0,2500)
     #axs[2].set_xlabel('Longitude [deg E]')
-    axs[2].set_ylabel('Max Distance [km]')
+    axs[2].set_ylabel('Min Offset [km]')
     axs[2].minorticks_on()
     axs[2].grid(which='major', linestyle='-', linewidth=0.5)
     axs[2].grid(which='minor', linestyle=':', linewidth=0.4)
+
+    ### --- PLOT ARABIA OFFSETS --- ###
+    for data in offset_data[1]:
+        axs[3].plot(data['Lon'], data['LENGTH_GEO'], color=O_COLORS.pop(0))
+    axs[3].set_xlim(-180,180)
+    axs[3].set_ylim(0,2500)
+    #axs[2].set_xlabel('Longitude [deg E]')
+    axs[3].set_ylabel('Min Offset [km]')
+    axs[3].minorticks_on()
+    axs[3].grid(which='major', linestyle='-', linewidth=0.5)
+    axs[3].grid(which='minor', linestyle=':', linewidth=0.4)
+
+
 
     #axs[0].legend()
     #axs[1].legend()
@@ -187,15 +203,38 @@ def plotOffsets(elev_dataset, offset_data):
 
     plt.show()
 
-shoreline_data = openData(PATH)
-#offset_data_meaned = meanLon(openData(OFFSET_PATH))
-offset_data_meaned = openData(OFFSET_PATH)
-min_offset = findLen(offset_data_meaned, method="min")
-mean_offset = findLen(offset_data_meaned, method="mean")
-max_offset = findLen(offset_data_meaned, method="max")
+### --- CALCULATE ARABIA OFFSETS --- ###
+A_offset_data_meaned = openData(os.path.join(OFFSET_PATH, 'Arabia'))
+A_min_offset = findLen(A_offset_data_meaned, method="min")
+A_max_offset = findLen(A_offset_data_meaned, method="max")
+### --- CALCULATE DEUTERONILUS OFFSETS --- ###
+D_offset_data_meaned = openData(os.path.join(OFFSET_PATH, 'Deuteronilus'))
+D_min_offset = findLen(D_offset_data_meaned, method="min")
+D_max_offset = findLen(D_offset_data_meaned, method="max")
+
 elev_df = grabElevation(ELEV_PATH)
 
 # I've plotted them in reverse so the main one ("min") is plotted on top
-plotOffsets(elev_df, [max_offset, min_offset])
-print('Min offset average: \n', min_offset.mean())
-print('Min offset std: \n', min_offset.std())
+plotOffsets(elev_df, [[D_max_offset, D_min_offset],[A_max_offset, A_min_offset]])
+
+# I'm not sure why but the f strings don't like the pd df keys in line
+A_mean = A_min_offset.mean()['LENGTH_GEO']
+A_std = A_min_offset.std()['LENGTH_GEO']
+D_mean = D_min_offset.mean()['LENGTH_GEO']
+D_std = D_min_offset.std()['LENGTH_GEO']
+print(
+    'Arabia Stats: \n'
+    f'Min offset mean: {A_mean:.1f} km \n'
+    f'Min offset std:  {A_std:.1f} km \n'
+    'Deuteronilus Stats: \n'
+    f'Min offset mean: {D_mean:.1f} km \n'
+    f'Min offset std:  {D_std:.1f} km \n'
+    )
+
+    #f'Min offset std:  {A_min_offset.std():.2f} km\n\n'
+    #f'Deuteronilus Stats:\n'
+    #f'Min offset mean: {D_min_offset.mean():.2f} km\n'
+    #f'Min offset std:  {D_min_offset.std():.2f} km'
+
+
+#print('Min offset std: \n', min_offset.std())
