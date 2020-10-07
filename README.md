@@ -1,15 +1,12 @@
 # Shoreline-Comparison
 Tool for comparing distance between line shapefiles at different latitudes (Sholes et al. 2020)
-This paper is currently in review at the Journal of Geophysical Research: Planets but in the meantime you can cite Sholes et al. 2019 (Mars 9 Conference Abstract).
+This paper is currently in review at the Journal of Geophysical Research: Planets but in the meantime you can cite the preprint Sholes et al. (2020): "Where are Mars' Hypothesized Ocean Shorelines? Large Lateral and Topographic Offsets Between Different Versions of Paleoshoreline Maps." https://doi.org/10.1002/essoar.10502868.1
 
 Used to compare the differences between mapped shorelines on Mars.
-Takes CSV files exported from ArcMap and computes the max latitudinal distance between any of the "shoreline" versions for each longitude within a tolerance (TOL) value.
-Uses a moving window of TOL factors (e.g. 2x, 3x) on each side.
-ALL INPUT DATA MUST HAVE THE LAST 3 COLUMNS EXACTLY AS:
-        Latitude |  Longitude  |  Elevation
-    Elevation data can be Null or in meters
-    Lat and Lon are in degrees. Lon is E (from -180 to 180)
-    
-This code can be run from the terminal as is. Adjustments need to be made to the location of the input data. The longitude tolerance value was not used in the paper, but the tool can be used (it provided a negligible difference for sufficiently small TOL, but we tested it just in case). 
+Takes CSV files exported from ArcMap (with LAT, LON, and Geodesic Length) and computes the minimum latitudinal distance between all tested maps of the "shoreline" versions. 
 
-CSV files for each of the tested "shorelines" will be uploaded to a permanent repository upon acceptance. 
+Imported data uses both a perpendicular method (where geodesic distances are calculated perpendicular to the outermost mapped levels) and a longitudinal method (where geodeisc distances are calculated along lines of longitude), with a pass for the plainsward-side and the highlands-side mappings. 
+    
+This code can be run from the terminal as is. Adjustments need to be made to the location of the input data. 
+
+All the data are uploaded to Sholes et al. (2020): https://doi.org/10.5281/zenodo.4035601
